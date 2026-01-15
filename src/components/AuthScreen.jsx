@@ -26,7 +26,8 @@ const AuthScreen = ({ onAuthComplete }) => {
             if (err.code === 'auth/configuration-not-found') {
                 setError('Firebase is not yet configured. Please follow the FIREBASE_SETUP.md guide.');
             } else {
-                setError('Google Sign-In failed. Please try again.');
+                // Display specific error for debugging
+                setError(`Google Sign-In failed: ${err.code} - ${err.message}`);
             }
             setLoading(false);
         }
