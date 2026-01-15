@@ -346,6 +346,10 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                     newFilled[cat] = true;
                 });
                 setOpponentFilled(newFilled);
+            } else {
+                // If answers are missing (e.g., cleared for new round), reset local opponent state
+                setOpponentAnswers({});
+                setOpponentFilled({});
             }
 
             // Sync STOP press

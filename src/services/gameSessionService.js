@@ -337,7 +337,11 @@ export const handlePlayerAction = async (languageCode, sessionId, playerId, acti
             updates['gameState.player2CardsFilled'] = 0;
             updates['gameState.currentRound'] = action.roundNumber;
             updates['gameState.isDiceTie'] = false;
-            // Clear answers for new round if needed, or handle separately
+
+            // Clear answers and dice rolls for the new round
+            updates['answers'] = {};
+            updates['diceRolls'] = {};
+
             console.log(`🔄 Next round started: Round ${action.roundNumber}`);
             break;
 
@@ -398,6 +402,11 @@ export const handlePlayerAction = async (languageCode, sessionId, playerId, acti
             updates['gameState.roundEnded'] = false;
             updates['gameState.stoppedBy'] = null;
             updates['currentRound'] = nextRound; // Legacy field
+
+            // Clear answers and dice rolls for the new round
+            updates['answers'] = {};
+            updates['diceRolls'] = {};
+
             console.log(`➡️ Advanced to round ${nextRound}`);
             break;
 
