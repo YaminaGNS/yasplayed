@@ -68,8 +68,14 @@ const CardFillingScreen = ({ initialCategory, filledCards, answers, onSave, onNe
             return;
         }
 
-        // Relaxed Validation: Allow any input!
-        // Incorrect answers will be caught during the comparison phase.
+        // Strict Validation: Must start with the selected letter
+        if (selectedLetter) {
+            const firstChar = trimmed.charAt(0).toUpperCase();
+            if (firstChar !== selectedLetter.toUpperCase()) {
+                triggerError(`Must start with ${selectedLetter}!`);
+                return;
+            }
+        }
 
         if (onSave) {
             onSave(currentCategory, trimmed);

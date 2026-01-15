@@ -295,17 +295,20 @@ export const handlePlayerAction = async (languageCode, sessionId, playerId, acti
                 if (myDice > theirDice) {
                     updates['gameState.diceWinner'] = playerId;
                     updates['gameState.stage'] = 'letter_selection';
+                    updates['gameState.isDiceTie'] = false;
                     console.log(`🏆 Dice winner: ${playerId}`);
                 } else if (theirDice > myDice) {
                     const otherPlayerId = sessionData.playerIds[playerIndex === 0 ? 1 : 0];
                     updates['gameState.diceWinner'] = otherPlayerId;
                     updates['gameState.stage'] = 'letter_selection';
+                    updates['gameState.isDiceTie'] = false;
                     console.log(`🏆 Dice winner: ${otherPlayerId}`);
                 } else {
                     // Tie - reset for re-roll
                     updates['gameState.player1Dice'] = null;
                     updates['gameState.player2Dice'] = null;
                     updates['gameState.currentTurn'] = 1; // Player 1 rolls first again
+                    updates['gameState.isDiceTie'] = true;
                     console.log(`🔄 Dice tie! Re-rolling...`);
                 }
             } else {
@@ -324,12 +327,16 @@ export const handlePlayerAction = async (languageCode, sessionId, playerId, acti
             updates['gameState.player2Rolling'] = false;
             updates['gameState.diceWinner'] = null;
             updates['gameState.chosenLetter'] = null;
+            updates['gameState.diceWinner'] = null;
+            updates['gameState.chosenLetter'] = null;
+            updates['selectedLetter'] = null; // Clear legacy field to prevent ghost letter
             updates['gameState.stage'] = 'dice_roll';
             updates['gameState.roundEnded'] = false;
             updates['gameState.stoppedBy'] = null;
             updates['gameState.player1CardsFilled'] = 0;
             updates['gameState.player2CardsFilled'] = 0;
             updates['gameState.currentRound'] = action.roundNumber;
+            updates['gameState.isDiceTie'] = false;
             // Clear answers for new round if needed, or handle separately
             console.log(`🔄 Next round started: Round ${action.roundNumber}`);
             break;
@@ -383,7 +390,9 @@ export const handlePlayerAction = async (languageCode, sessionId, playerId, acti
             updates['gameState.stage'] = 'dice_roll';
             updates['gameState.player1Dice'] = null;
             updates['gameState.player2Dice'] = null;
+            updates['gameState.player2Dice'] = null;
             updates['gameState.chosenLetter'] = null;
+            updates['selectedLetter'] = null; // Clear legacy field to prevent ghost letter
             updates['gameState.player1CardsFilled'] = 0;
             updates['gameState.player2CardsFilled'] = 0;
             updates['gameState.roundEnded'] = false;

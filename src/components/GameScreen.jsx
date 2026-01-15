@@ -167,6 +167,7 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
     const [announcing, setAnnouncing] = useState(false);
     const [waitingForOpponent, setWaitingForOpponent] = useState(false);
     const [pendingOpponentRoll, setPendingOpponentRoll] = useState(null);
+    const [isDiceTie, setIsDiceTie] = useState(false);
 
     // Sequential dice rolling states
     const [myPlayerNumber, setMyPlayerNumber] = useState(null); // 1 or 2
@@ -214,7 +215,7 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
         if (gamePhase === 'round_announcement') {
             const timer = setTimeout(() => {
                 setGamePhase('dice_roll');
-            }, 2500);
+            }, 2000);
             return () => clearTimeout(timer);
         }
     }, [gamePhase]);
@@ -258,6 +259,11 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                 setCurrentRoller('none');
             }
 
+            // Sync Dice Tie State
+            if (gameState.isDiceTie !== undefined) {
+                setIsDiceTie(gameState.isDiceTie);
+            }
+
             // Sync dice rolls from gameState
             const opponentPlayerNum = (playerIndex === 0) ? 2 : 1;
             const opponentDice = opponentPlayerNum === 1 ? gameState.player1Dice : gameState.player2Dice;
@@ -266,8 +272,14 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
             // Updated local dice results from session
             setDiceResults(prev => ({
                 me: myDice || prev.me,
+                me: myDice || prev.me,
                 opponent: opponentDice || prev.opponent
             }));
+
+            // Detect new opponent roll for animation
+            if (opponentDice && opponentDice !== diceResults.opponent && diceResults.opponent === 0) {
+                setPendingOpponentRoll(opponentDice);
+            }
 
             // If dice were reset by server (tie), clear local visuals
             if (gameState.player1Dice === null && gameState.player2Dice === null && (diceResults.me !== 0 || diceResults.opponent !== 0)) {
@@ -275,21 +287,27 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
             }
 
             // Check if both rolled - finalize
-            if (gameState.player1Dice && gameState.player2Dice && gamePhase === 'dice_roll') {
+            // STRICT: Only transition if animations are done (rolling is false) and we have both values
+            if (gameState.player1Dice && gameState.player2Dice && gamePhase === 'dice_roll' && !rolling && !pendingOpponentRoll) {
                 // Finalize logic...
                 if (gameState.diceWinner) {
                     const iWon = gameState.diceWinner === effectivePlayerId;
                     setRollWinner(iWon ? 'me' : 'opponent');
                     setTimeout(() => {
                         setGamePhase('letter_select');
-                    }, 1000); // Small delay to see the results
+                    }, 2000); // Wait 2s to ensure players see the dice result
                     console.log(`🏆 Dice winner: ${iWon ? 'me' : 'opponent'}`);
                 }
             }
 
             // Sync selected letter from gameState - closes letter selection for BOTH players
             const chosenLetter = gameState.chosenLetter || sessionData.selectedLetter;
-            if (chosenLetter && chosenLetter !== selectedLetter) {
+            const sessionRound = gameState.currentRound || 1;
+
+            if (chosenLetter &&
+                chosenLetter !== selectedLetter &&
+                sessionRound === currentRound &&
+                !['round_announcement', 'comparison', 'round_winner', 'game_winner', 'dice_roll'].includes(gamePhase)) {
                 console.log(`🔤 Letter chosen: ${chosenLetter} - closing letter screen for both players`);
                 setSelectedLetter(chosenLetter);
 
@@ -470,18 +488,9 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
         }
     }, [rolling, gamePhase, diceResults.me, finalizeRoll, isRealOpponent, sessionId, languageCode, effectivePlayerId, myPlayerNumber, currentTurn]);
 
-    // Auto roll / re-roll logic
-    useEffect(() => {
-        if (!isRealOpponent || gamePhase !== 'dice_roll' || myPlayerNumber === null) return;
 
-        if (currentTurn === myPlayerNumber && diceResults.me === 0 && !rolling) {
-            console.log('🤖 Auto-triggering roll for turn:', currentTurn);
-            const timer = setTimeout(() => {
-                handleRoll();
-            }, 1500);
-            return () => clearTimeout(timer);
-        }
-    }, [currentTurn, myPlayerNumber, diceResults.me, rolling, gamePhase, isRealOpponent, handleRoll]);
+
+
 
     // Automation for spectator mode - Letter selection
     useEffect(() => {
@@ -603,7 +612,7 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
             setTimeout(() => {
                 setAnnouncing(false);
                 setGamePhase('playing');
-            }, 3500);
+            }, 2500);
         }
     };
 
@@ -665,18 +674,13 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
         const newRoundWinners = [...roundWinners, winner];
         setRoundWinners(newRoundWinners);
         setCurrentRoundWinner(winner);
-        // If this is the first round, skip round_winner overlay and proceed directly to next round
-        if (roundWinners.length === 0) {
-            setTimeout(() => {
-                checkGameStatus(newRoundWinners);
-            }, 500);
-        } else {
-            setGamePhase('round_winner');
-            setTimeout(() => {
-                setGamePhase('none'); // Transition
-                checkGameStatus(newRoundWinners);
-            }, 4000);
-        }
+
+        // Always show round winner popup, then proceed
+        setGamePhase('round_winner');
+        setTimeout(() => {
+            setGamePhase('none'); // Transition
+            checkGameStatus(newRoundWinners);
+        }, 3000); // 3 seconds for winner popup
     };
 
     const checkGameStatus = (winners) => {
@@ -978,7 +982,7 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                         <button
                             className={`dice-roll-trigger-btn ${gamePhase === 'dice_roll' && !rolling && currentRoller === 'none' && !isSpectator ? 'attention' : ''}`}
                             onClick={handleRoll}
-                            disabled={gamePhase !== 'dice_roll' || rolling || currentRoller !== 'none' || isSpectator || (isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber)}
+                            disabled={gamePhase !== 'dice_roll' || rolling || currentRoller !== 'none' || isSpectator || (isRealOpponent && diceResults.opponent === 0 && myPlayerNumber !== null && currentTurn !== myPlayerNumber)}
                             style={{
                                 opacity: (gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber) ? 0.3 : 1,
                                 filter: (gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber) ? 'grayscale(100%)' : 'none',
@@ -1005,7 +1009,11 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                                 isRolling={rolling && (currentRoller === 'me' || currentRoller === 'both')}
                                 isActiveRoller={currentRoller === 'me' || currentRoller === 'both'}
                             />
-                            {gamePhase === 'dice_roll' && !rolling && currentRoller === 'none' && !isSpectator && !(isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber) && <span className="roll-hint">TAP TO ROLL</span>}
+                            {gamePhase === 'dice_roll' && !rolling && currentRoller === 'none' && !isSpectator && !(isRealOpponent && diceResults.opponent === 0 && myPlayerNumber !== null && currentTurn !== myPlayerNumber) && (
+                                <span className="roll-hint" style={{ backgroundColor: isDiceTie ? '#ff4444' : '#ffd700', color: isDiceTie ? 'white' : '#1a0a2e' }}>
+                                    {isDiceTie ? 'TIE! ROLL AGAIN' : 'TAP TO ROLL'}
+                                </span>
+                            )}
                         </button>
                     </div>
 
