@@ -357,7 +357,9 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                 // Opponent pressed STOP
                 if (gamePhase === 'playing' && !roundEnded) {
                     setRoundEnded(true);
-                    endRound(opponent.displayName || 'Opponent');
+                    // Use the name sent by the stopper, or fallback to opponent display name
+                    const stopperName = gameState.stoppedByName || opponent.displayName || 'Opponent';
+                    endRound(stopperName);
                 }
             }
         });
@@ -415,9 +417,10 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
             // Tie - reset and roll again
             setTimeout(() => {
                 setDiceResults({ me: 0, opponent: 0 }); // Reset visuals
-                // Resetting handled by next roll
-                handleRoll();
-            }, 1000);
+                setIsDiceTie(true); // Ensure local state matches
+                // Auto-roll for simultaneous tie breaker
+                setTimeout(() => handleRoll(), 500);
+            }, 1500);
         } else {
             const winner = myVal > oppVal ? 'me' : 'opponent';
             setRollWinner(winner);
@@ -440,11 +443,15 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
 
 
     const handleRoll = React.useCallback(async () => {
-        // Sequential rolling: Check if it's my turn
+        // Sequential rolling check:
+        // Rolling allowed if:
+        // 1. Not currently rolling
+        // 2. Phase is dice_roll
+        // 3. Haven't rolled yet (result is 0)
         if (rolling || gamePhase !== 'dice_roll' || diceResults.me !== 0) return;
 
-        // For real opponents: Check if it's my turn
-        if (isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber) {
+        // Turn enforcement (skip if simultaneous turn 0 or tie breaker)
+        if (isRealOpponent && myPlayerNumber !== null && currentTurn !== 0 && !isDiceTie && currentTurn !== myPlayerNumber) {
             console.log(`⏳ Not my turn. Current turn: Player ${currentTurn}, I am Player ${myPlayerNumber}`);
             return;
         }
@@ -627,7 +634,8 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
         if (isRealOpponent && sessionId && languageCode && !roundEnded) {
             try {
                 await handlePlayerAction(languageCode, sessionId, effectivePlayerId, {
-                    type: 'STOP_PRESSED'
+                    type: 'STOP_PRESSED',
+                    playerName: user?.displayName || 'Player'
                 });
                 console.log('⏹️ STOP press synced');
             } catch (error) {
@@ -636,7 +644,15 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
         }
 
         setIsFillingScreenOpen(false);
-        setStopperName(presserName);
+        setIsFillingScreenOpen(false);
+        // If I pressed it, show 'YOU'. If opponent pressed it, show their name.
+        // presserName passed to this function is already formatted for local use mostly, 
+        // but let's ensure consistency with the new logic.
+        const displayName = (presserName === user?.displayName || presserName === 'You') ?
+            (user?.displayName === 'Guest Player' ? 'YOU' : (user?.displayName || 'YOU')) :
+            presserName;
+
+        setStopperName(displayName);
         setShowStopNotification(true);
         setTimeout(() => {
             setShowStopNotification(false);

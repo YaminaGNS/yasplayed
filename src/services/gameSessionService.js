@@ -304,12 +304,12 @@ export const handlePlayerAction = async (languageCode, sessionId, playerId, acti
                     updates['gameState.isDiceTie'] = false;
                     console.log(`🏆 Dice winner: ${otherPlayerId}`);
                 } else {
-                    // Tie - reset for re-roll
+                    // Tie - reset for re-roll (Simultaneous)
                     updates['gameState.player1Dice'] = null;
                     updates['gameState.player2Dice'] = null;
-                    updates['gameState.currentTurn'] = 1; // Player 1 rolls first again
+                    updates['gameState.currentTurn'] = 0; // 0 = Simultaneous / Both Roll
                     updates['gameState.isDiceTie'] = true;
-                    console.log(`🔄 Dice tie! Re-rolling...`);
+                    console.log(`🔄 Dice tie! Re-rolling simultaneously...`);
                 }
             } else {
                 // Only one player has rolled - switch turn to other player
@@ -369,8 +369,9 @@ export const handlePlayerAction = async (languageCode, sessionId, playerId, acti
             // Player pressed STOP - end the round
             updates['gameState.roundEnded'] = true;
             updates['gameState.stoppedBy'] = playerId;
+            updates['gameState.stoppedByName'] = action.playerName || 'Unknown Player';
             updates['gameState.stage'] = 'comparison';
-            console.log(`⏹️ ${playerId} pressed STOP - round ended`);
+            console.log(`⏹️ ${playerId} (${action.playerName}) pressed STOP - round ended`);
             break;
 
         case 'ROUND_WINNER':
