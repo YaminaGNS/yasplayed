@@ -1,0 +1,403 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;700;800;900&family=Cinzel:wght@700&display=swap');
+
+.game-screen-3p {
+    width: 100vw;
+    height: 100vh;
+    background-image: url('https://i.postimg.cc/pdDv77pX/20260106-2306-Luxury-Geometric-Background-simple-compose-01keanggh2e53b732ptsjx4rys.png');
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding: 2vh 2vw;
+    box-sizing: border-box;
+}
+
+.game-screen-3p::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ZONE 1: TOP BAR */
+.top-bar-3p {
+    height: 15vh;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-bottom: 2px solid #ffd700;
+    background: rgba(0, 0, 0, 0.4);
+    margin-bottom: 1vh;
+    z-index: 10;
+}
+
+.badge-unit-3p {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    z-index: 20;
+}
+
+.player-badge {
+    background: #6a0dad;
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    min-width: 130px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    height: 6vh;
+    box-sizing: border-box;
+}
+
+.player-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: #FFD700;
+    border: 2px solid #fff;
+    margin-right: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.player-name {
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.score-display-3p {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin-top: 3px;
+}
+
+.score-label-3p {
+    background: linear-gradient(to bottom, #FFD700, #FF8C00);
+    border: 2px solid #8B4513;
+    border-radius: 6px;
+    padding: 2px 12px;
+    box-shadow: 0 3px 0 #8B4513;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 6px;
+    color: #ff00ff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.score-value-container-3p {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.score-value-3p {
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 11px;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 1);
+    z-index: 2;
+}
+
+/* ZONE 2: MAIN GAMEPLAY AREA */
+.main-gameplay-3p {
+    height: 70vh;
+    width: 100%;
+    display: flex;
+    z-index: 5;
+}
+
+.side-column-3p {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.dice-container-3p {
+    width: 50px;
+    height: 50px;
+}
+
+.stop-btn-3p {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+    transition: transform 0.1s;
+}
+
+.stop-btn-3p:active:not(.disabled) {
+    transform: scale(0.92);
+}
+
+.card-common-3p {
+    width: 100px;
+    height: 150px;
+    object-fit: contain;
+}
+
+.empty-slot-3p {
+    width: 100px;
+    height: 150px;
+    border: 2px solid white;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* MIDDLE COLUMN (Comparison Zone) */
+.middle-column-3p {
+    flex: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comparison-row-3p {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+}
+
+.comparison-slot-3p {
+    width: 100px;
+    height: 150px;
+    border: 2px solid white;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.comparison-slot-3p:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+/* ZONE 3: BOTTOM BAR (Player 2 - YOU) */
+.bottom-bar-3p {
+    height: 15vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.bottom-ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.bottom-card-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Labels for comparison */
+.result-status-text {
+    position: absolute;
+    bottom: -35px;
+    width: 100%;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    white-space: nowrap;
+}
+
+.result-status-text.correct {
+    color: #4CAF50;
+}
+
+.result-status-text.wrong {
+    color: #ff4444;
+}
+
+.result-status-text.same {
+    color: #ff9800;
+}
+
+/* Floating Points Adjustment */
+.points-float {
+    position: absolute;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    font-weight: 400;
+    pointer-events: none;
+    z-index: 30;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    top: -30px;
+}
+
+.points-float.plus-ten {
+    color: #ffd700;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
+}
+
+.points-float.plus-zero {
+    color: #ff4444;
+    filter: drop-shadow(0 0 5px rgba(255, 68, 68, 0.6));
+}
+
+/* Refined 3D Dice */
+.dice-icon-refined {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    transform-style: preserve-3d;
+    cursor: default;
+    z-index: 10;
+}
+
+.dice-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 8px;
+    box-sizing: border-box;
+    box-shadow:
+        inset -2px -2px 5px rgba(0, 0, 0, 0.2),
+        inset 2px 2px 5px rgba(255, 255, 255, 1),
+        0 8px 15px rgba(0, 0, 0, 0.4);
+    border: 1px solid #d1d1d1;
+    z-index: 2;
+}
+
+.dice-icon-refined::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #b0b0b0;
+    border-radius: 10px;
+    transform: translateY(4px);
+    z-index: 1;
+}
+
+.dice-dot-realistic {
+    width: 8px;
+    height: 8px;
+    background: radial-gradient(circle at 30% 30%, #444 0%, #000 100%);
+    border-radius: 50%;
+    justify-self: center;
+    align-self: center;
+    box-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
+}
+
+.dice-dot-realistic.visible {
+    opacity: 1;
+}
+
+.dice-dot-realistic.hidden {
+    opacity: 0;
+}
+
+.rolling-3d {
+    filter: blur(0.8px);
+}
+
+.active-roller-3d {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 10px #ffd700);
+}
+
+/* Mobile Adjustments for fixed sizes */
+@media (max-width: 850px) {
+    .player-badge {
+        min-width: 110px;
+        padding: 4px 8px;
+    }
+
+    .player-avatar {
+        width: 26px;
+        height: 26px;
+    }
+
+    .player-name {
+        font-size: 0.75rem;
+    }
+
+    .score-label-3p {
+        font-size: 5px;
+        padding: 2px 8px;
+    }
+
+    .score-value-3p {
+        font-size: 9px;
+    }
+
+    .card-common-3p,
+    .empty-slot-3p,
+    .comparison-slot-3p {
+        width: 80px;
+        height: 120px;
+    }
+
+    .stop-btn-3p {
+        width: 80px;
+        height: 80px;
+    }
+
+    .dice-container-3p,
+    .dice-icon-refined {
+        width: 40px !important;
+        height: 40px !important;
+    }
+}
+
+@media (max-width: 650px) {
+
+    .card-common-3p,
+    .empty-slot-3p,
+    .comparison-slot-3p {
+        width: 65px;
+        height: 97px;
+    }
+
+    .stop-btn-3p {
+        width: 65px;
+        height: 65px;
+    }
+
+    .player-badge {
+        min-width: 90px;
+    }
+}
