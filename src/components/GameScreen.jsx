@@ -418,9 +418,8 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
             setTimeout(() => {
                 setDiceResults({ me: 0, opponent: 0 }); // Reset visuals
                 setIsDiceTie(true); // Ensure local state matches
-                // Auto-roll for simultaneous tie breaker
-                setTimeout(() => handleRoll(), 500);
-            }, 1500);
+                // Manual roll required for simultaneous tie breaker - no auto roll
+            }, 1000);
         } else {
             const winner = myVal > oppVal ? 'me' : 'opponent';
             setRollWinner(winner);
@@ -1002,14 +1001,14 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                         <button
                             className={`dice-roll-trigger-btn ${gamePhase === 'dice_roll' && !rolling && currentRoller === 'none' && !isSpectator ? 'attention' : ''}`}
                             onClick={handleRoll}
-                            disabled={gamePhase !== 'dice_roll' || rolling || currentRoller !== 'none' || isSpectator || (isRealOpponent && diceResults.opponent === 0 && myPlayerNumber !== null && currentTurn !== myPlayerNumber)}
+                            disabled={gamePhase !== 'dice_roll' || rolling || currentRoller !== 'none' || isSpectator || (isRealOpponent && diceResults.opponent === 0 && myPlayerNumber !== null && currentTurn !== 0 && !isDiceTie && currentTurn !== myPlayerNumber)}
                             style={{
-                                opacity: (gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber) ? 0.3 : 1,
-                                filter: (gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber) ? 'grayscale(100%)' : 'none',
+                                opacity: (gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== 0 && !isDiceTie && currentTurn !== myPlayerNumber) ? 0.3 : 1,
+                                filter: (gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== 0 && !isDiceTie && currentTurn !== myPlayerNumber) ? 'grayscale(100%)' : 'none',
                                 position: 'relative' // For absolute positioning of waiting text if needed
                             }}
                         >
-                            {(gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== myPlayerNumber) && (
+                            {(gamePhase === 'dice_roll' && isRealOpponent && myPlayerNumber !== null && currentTurn !== 0 && !isDiceTie && currentTurn !== myPlayerNumber) && (
                                 <div style={{
                                     position: 'absolute',
                                     top: '-25px',
@@ -1029,7 +1028,7 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                                 isRolling={rolling && (currentRoller === 'me' || currentRoller === 'both')}
                                 isActiveRoller={currentRoller === 'me' || currentRoller === 'both'}
                             />
-                            {gamePhase === 'dice_roll' && !rolling && currentRoller === 'none' && !isSpectator && !(isRealOpponent && diceResults.opponent === 0 && myPlayerNumber !== null && currentTurn !== myPlayerNumber) && (
+                            {(gamePhase === 'dice_roll' && !rolling && currentRoller === 'none' && !isSpectator && !(isRealOpponent && diceResults.opponent === 0 && myPlayerNumber !== null && currentTurn !== 0 && !isDiceTie && currentTurn !== myPlayerNumber)) && (
                                 <span className="roll-hint" style={{ backgroundColor: isDiceTie ? '#ff4444' : '#ffd700', color: isDiceTie ? 'white' : '#1a0a2e' }}>
                                     {isDiceTie ? 'TIE! ROLL AGAIN' : 'TAP TO ROLL'}
                                 </span>
