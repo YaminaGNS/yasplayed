@@ -177,6 +177,124 @@ const attemptMatch = async (languageCode, myEntryId, myPlayerId, gameMode, betAm
     };
 
     // Start the matching process
+    if (gameMode === 'tournament') {
+        attemptTournamentMatch(languageCode, myEntryId, playerId, betAmount);
+    } else {
+        attemptMatch(languageCode, myEntryId, playerId, gameMode, betAmount);
+    }
+};
+
+/**
+ * Orchestrates the matching process for TOURNAMENTS (4 Players).
+ */
+const attemptTournamentMatch = async (languageCode, myEntryId, myPlayerId, betAmount) => {
+    const queueCollectionName = getLanguageCollection(languageCode, 'tournament_queue');
+    const sessionsCollectionName = getLanguageCollection(languageCode, 'game_sessions');
+
+    let attempts = 0;
+    const maxAttempts = 5; // Try for ~10 seconds
+
+    const tryMatch = async () => {
+        attempts++;
+        console.log(`🏆 Tournament Matchmaking attempt ${attempts}/${maxAttempts}`);
+
+        try {
+            const matched = await runTransaction(db, async (transaction) => {
+                // Find 3 other waiting players
+                const q = query(
+                    collection(db, queueCollectionName),
+                    where('status', '==', 'waiting'),
+                    where('betAmount', '==', betAmount),
+                    orderBy('timestamp', 'asc'),
+                    limit(10)
+                );
+
+                // 1. Get waiting players
+                const snapshot = await getDocs(q);
+
+                // Filter out ourselves and get first 3 others
+                const candidates = snapshot.docs
+                    .filter(doc => doc.id !== myEntryId)
+                    .slice(0, 3);
+
+                // Need exactly 3 others to make a group of 4
+                if (candidates.length < 3) {
+                    return false; // Not enough players yet
+                }
+
+                // 2. Transactional Read: Lock ALL 4 documents
+                const myEntryRef = doc(db, queueCollectionName, myEntryId);
+                const candidateRefs = candidates.map(c => doc(db, queueCollectionName, c.id));
+
+                const myEntrySnap = await transaction.get(myEntryRef);
+                const candidateSnaps = await Promise.all(candidateRefs.map(ref => transaction.get(ref)));
+
+                // Validation
+                if (!myEntrySnap.exists()) return false;
+                if (myEntrySnap.data().status !== 'waiting') return true; // Already matched
+
+                const validCandidates = [];
+                for (let i = 0; i < candidateSnaps.length; i++) {
+                    const snap = candidateSnaps[i];
+                    if (!snap.exists() || snap.data().status !== 'waiting') {
+                        return false; // Someone disappeared or was taken
+                    }
+                    validCandidates.push(snap.data());
+                }
+
+                // 3. Create Session with ALL 4 IDs
+                const sessionRef = doc(collection(db, sessionsCollectionName));
+                const sessionId = sessionRef.id;
+
+                const allPlayerIds = [myPlayerId, ...validCandidates.map(c => c.playerId)];
+                // Shuffle players for random bracket placement if desired, or keep wait order?
+                // Keeping order implies: User (P1), Waiter1 (P2), Waiter2 (P3), Waiter3 (P4)
+
+                const sessionData = {
+                    sessionId,
+                    playerIds: allPlayerIds,
+                    gameMode: 'tournament',
+                    betAmount,
+                    status: 'active',
+                    createdAt: serverTimestamp(),
+                    lastUpdate: serverTimestamp(),
+
+                    // Tournament specific state
+                    tournamentState: {
+                        stage: 'semifinals',
+                        semiAPlayers: [allPlayerIds[0], allPlayerIds[1]],
+                        semiBPlayers: [allPlayerIds[2], allPlayerIds[3]],
+                        semiAWinner: null,
+                        semiBWinner: null,
+                        champion: null
+                    }
+                };
+
+                // 4. Update ALL queue entries
+                transaction.update(myEntryRef, { status: 'matched', sessionId: sessionId });
+                candidateRefs.forEach(ref => {
+                    transaction.update(ref, { status: 'matched', sessionId: sessionId });
+                });
+
+                // 5. Create Session
+                transaction.set(sessionRef, sessionData);
+                console.log("🏆 Tournament Created:", sessionId, "Players:", allPlayerIds);
+                return true;
+            });
+
+            if (matched) return;
+
+            if (attempts < maxAttempts) {
+                setTimeout(() => tryMatch(), 2000);
+            } else {
+                console.log('⏱️ Tournament Matchmaking exhausted');
+            }
+        } catch (error) {
+            console.error("Tournament matchmaking failed:", error);
+            if (attempts < maxAttempts) setTimeout(() => tryMatch(), 2000);
+        }
+    };
+
     tryMatch();
 };
 
@@ -269,6 +387,9 @@ export const joinTournamentQueue = async (playerId, languageCode, betAmount) => 
     const myEntryId = docRef.id;
 
     console.log('🎮 Joined tournament queue:', myEntryId);
+
+    // Trigger orchestration to find 3 others
+    attemptTournamentMatch(languageCode, myEntryId, playerId, betAmount);
 
     // Try to match with other players
     const sessionId = await waitForMatchWithTimeout(languageCode, myEntryId, MATCHMAKING_TIMEOUT);
