@@ -844,9 +844,9 @@
 
 .crown-img-absolute {
     position: absolute;
-    top: -40px;
-    right: -25px;
-    width: 90px;
+    top: -25px;
+    right: -15px;
+    width: 60px;
     height: auto;
     transform: rotate(15deg);
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
@@ -859,7 +859,7 @@
     }
 
     to {
-        transform: rotate(18deg) translateY(-10px);
+        transform: rotate(18deg) translateY(-5px);
     }
 }
 

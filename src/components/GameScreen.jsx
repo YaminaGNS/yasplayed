@@ -1080,9 +1080,22 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                     <motion.div className="round-winner-popup-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <div className="round-winner-card">
                             <div className="winner-avatar-circle">
-                                <img src={currentRoundWinner === 'me' ? user?.photoURL : mockOpponent.photoURL} alt="Winner" />
+                                {(currentRoundWinner === 'me' ? user?.photoURL : mockOpponent.photoURL) ? (
+                                    <img src={currentRoundWinner === 'me' ? user?.photoURL : mockOpponent.photoURL} alt="Winner" />
+                                ) : (
+                                    <div className="avatar-initial-large" style={{
+                                        width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        backgroundColor: '#FFD700', fontSize: '2.5rem', fontWeight: 'bold', color: '#500000'
+                                    }}>
+                                        {(currentRoundWinner === 'me' ? (user?.displayName || 'Y') : (mockOpponent.displayName || 'O')).charAt(0).toUpperCase()}
+                                    </div>
+                                )}
                             </div>
-                            <h3 className="winner-name-text">{currentRoundWinner === 'me' ? (user?.displayName || 'You') : mockOpponent.displayName}</h3>
+                            <h3 className="winner-name-text">
+                                {currentRoundWinner === 'me'
+                                    ? (user?.displayName === 'Guest Player' ? 'YOU' : (user?.displayName || 'YOU'))
+                                    : mockOpponent.displayName}
+                            </h3>
                             <p className="wins-round-text">wins Round {roundWinners.length}!</p>
                         </div>
                     </motion.div>
@@ -1100,10 +1113,23 @@ const GameScreen = ({ user, opponent, sessionId, languageCode, onGameEnd, betAmo
                             transition={{ type: "spring", stiffness: 100 }}
                         >
                             <div className="avatar-crown-wrapper">
-                                <img src={finalGameWinner === 'me' ? user?.photoURL : mockOpponent.photoURL} className="final-winner-avatar" alt="Final Winner" />
+                                {(finalGameWinner === 'me' ? user?.photoURL : mockOpponent.photoURL) ? (
+                                    <img src={finalGameWinner === 'me' ? user?.photoURL : mockOpponent.photoURL} className="final-winner-avatar" alt="Final Winner" />
+                                ) : (
+                                    <div className="final-winner-avatar" style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        backgroundColor: '#FFD700', fontSize: '3.5rem', fontWeight: 'bold', color: '#500000'
+                                    }}>
+                                        {(finalGameWinner === 'me' ? (user?.displayName || 'Y') : (mockOpponent.displayName || 'O')).charAt(0).toUpperCase()}
+                                    </div>
+                                )}
                                 <img src={winnerCrown} className="crown-img-absolute" alt="Crown" />
                             </div>
-                            <h2 className="final-winner-name">{finalGameWinner === 'me' ? (user?.displayName || 'player name') : mockOpponent.displayName}</h2>
+                            <h2 className="final-winner-name">
+                                {finalGameWinner === 'me'
+                                    ? (user?.displayName === 'Guest Player' ? 'YOU' : (user?.displayName || 'You'))
+                                    : mockOpponent.displayName}
+                            </h2>
                             <p className="final-win-label">win</p>
                             <div className="reward-section">
                                 <img src={winnerCoins} className="coin-img-large" alt="Coins" />
